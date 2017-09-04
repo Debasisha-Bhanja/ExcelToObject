@@ -1,0 +1,79 @@
+-------------------------------------------------------------------------------------------------------------
+Utility
+
+/**
+* Parses an excel file into a list of beans.
+*
+* @param <T> the type of the bean
+* @param xlsFile the excel data file to parse
+* @param jxlsConfigFile the jxls config file describing how to map rows to beans
+* @return the list of beans or an empty list there are none
+* @throws Exception if there is a problem parsing the file
+*/
+public static <T> List<T> parseExcelFileToBeans(final File xlsFile,
+                                                final File jxlsConfigFile)
+                                                throws Exception {
+  final XLSReader xlsReader = ReaderBuilder.buildFromXML(jxlsConfigFile);
+  final List<T> result = new ArrayList<>();
+  final Map<String, Object> beans = new HashMap<>();
+  beans.put("result", result);
+  try (InputStream inputStream = new BufferedInputStream(new FileInputStream(xlsFile))) {
+    xlsReader.read(inputStream, beans);
+  }
+  return result;
+}
+-------------------------------------------------------------------------------------------------------------
+domain
+package model;
+
+public class Person {
+
+  private String firstName;
+  private String lastName;
+  private int age;
+
+  public Person() {
+  }
+  public String getFirstName() {
+    return firstName;
+  }
+  public void setFirstName(String firstName) {
+    this.firstName = firstName;
+  }
+  public String getLastName() {
+    return lastName;
+  }
+  public void setLastName(String lastName) {
+    this.lastName = lastName;
+  }
+  public int getAge() {
+    return age;
+  }
+  public void setAge(int age) {
+    this.age = age;
+  }
+}
+---------------------------------------------------------------------------------------------
+mapping config
+<workbook>
+  <worksheet name="Sheet1">
+    <section startRow="0" endRow="0" />
+    <loop startRow="1" endRow="1" items="result" var="person" varType="model.Person">
+      <section startRow="1" endRow="1">
+        <mapping row="1" col="0">person.firstName</mapping>
+        <mapping row="1" col="1">person.lastName</mapping>
+        <mapping row="1" col="2">person.age</mapping>
+      </section>
+      <loopbreakcondition>
+        <rowcheck offset="0">
+          <cellcheck offset="0" />
+        </rowcheck>
+      </loopbreakcondition>
+    </loop>
+  </worksheet>
+</workbook>
+------------------------------------------------------------------------------------------------
+Main Class
+List<Person> persons = Utils.parseExcelFileToBeans(new File("/path/to/personData.xls"),
+                                                   new File("/path/to/personConfig.xml"));
+                                                   
